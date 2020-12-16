@@ -130,7 +130,7 @@ src/data/
 **/checkpoints/*
 
 # Pycharm
-
+**/.idea/
 .DS_Store
 
 
