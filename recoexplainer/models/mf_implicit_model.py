@@ -15,6 +15,7 @@ class MFImplicitModel:
 
     def fit(self, dataset):
         self.model.fit(dataset)
+        return True
 
     def predict(self, user_id, item_id):
         dot_prod = self.model.user_factors[user_id] * \
