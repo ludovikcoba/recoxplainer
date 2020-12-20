@@ -6,10 +6,13 @@ import unittest
 
 class TestDataReader(unittest.TestCase):
 
+    def setUp(self) -> None:
+        self.data = DataReader(cfg.testdata)
+
     def test_import(self):
         data = DataReader(cfg.testdata)
 
-        self.assertEqual(data.num_user, 5)
-        self.assertEqual(data.num_item, 32)
-        self.assertEqual(data.dataset.shape[0], 76)
-        self.assertEqual(data.dataset.shape[1], 4)
+        self.assertEqual(self.data.num_user, 250)
+        self.assertEqual(self.data.num_item, 552)
+        self.assertEqual(self.data.dataset.shape[0], 1001)
+        self.assertEqual(self.data.dataset.shape[1], 4)

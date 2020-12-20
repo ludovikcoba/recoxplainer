@@ -1,16 +1,20 @@
 base:
   testdata:
     filepath_or_buffer: 'datasets/fake_data.csv'
-    sep: ','
-    header: 0
+    sep: '\t'
     names: [ 'userId', 'itemId', 'rating', 'timestamp']
   data:
-      filepath_or_buffer: 'datasets/ml-1m/ratings.dat'
-      sep: '::'
-      header: None
+      filepath_or_buffer: 'datasets/ml-100k/u.data'
+      sep: '\t'
       names: [ 'userId', 'itemId', 'rating', 'timestamp']
   model:
-    learning_rate: 0.04
-    reg_term: 0.001
-    latent_dim: 10
+    learning_rate: 0.01
+    reg_term: 0.00
+    weight_decay: 0
+    latent_dim: 100
     epochs: 10
+    num_negative: 10
+    batch_size: 512
+    cuda: False
+    optimizer: 'adam'
+

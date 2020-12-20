@@ -11,7 +11,8 @@ class DataReader:
     @property
     def dataset(self):
         if self._dataset is None:
-            self._dataset = pd.read_csv(**self.config)
+            self._dataset = pd.read_csv(**self.config,
+                                        engine='python')
         return self._dataset
 
     @property
@@ -59,6 +60,11 @@ class DataReader:
             ['userId', 'itemId', 'rating', 'timestamp']
         ]
         return self
+
+    def binarize(self):
+        """binarize into 0 or 1, imlicit feedback"""
+        self._dataset['rating'][self._dataset['rating'] > 0] = 1.0
+        self._dataset = self._dataset[self._dataset['rating'] > 0]
 
     @property
     def num_user(self):

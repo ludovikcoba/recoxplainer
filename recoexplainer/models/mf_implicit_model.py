@@ -1,4 +1,5 @@
 import numpy as np
+import scipy
 
 
 class MFImplicitModel:
@@ -14,8 +15,18 @@ class MFImplicitModel:
         self.epochs = epochs
 
     def fit(self, dataset):
-        self.model.fit(dataset)
+        self.model.fit(
+            self.rearrange_dataset(dataset))
         return True
+
+    @staticmethod
+    def rearrange_dataset(ds):
+        # todo: fix the max to something less troublesome.
+        ds_mtr = scipy.sparse.csr_matrix((ds['itemId'].max() + 1,
+                                          ds['userId'].max() + 1))
+        ds_mtr[ds['itemId'], ds['userId']] = 1
+
+        return ds_mtr
 
     def predict(self, user_id, item_id):
         dot_prod = self.model.user_factors[user_id] * \
