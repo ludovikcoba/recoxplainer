@@ -10,9 +10,8 @@ class TestDataReader(unittest.TestCase):
         self.data = DataReader(cfg.testdata)
 
     def test_import(self):
-        data = DataReader(cfg.testdata)
 
-        self.assertEqual(self.data.num_user, 250)
-        self.assertEqual(self.data.num_item, 552)
-        self.assertEqual(self.data.dataset.shape[0], 1001)
+        self.assertEqual(self.data.num_user, 249)
+        self.assertEqual(self.data.num_item, 551)
+        self.assertEqual(self.data.dataset.shape[0], 1000)
         self.assertEqual(self.data.dataset.shape[1], 4)

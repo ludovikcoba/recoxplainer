@@ -15,9 +15,7 @@ class GMFModel(PyTorchModel):
 
         super().__init__(config)
 
-        self.dataset = None
-        self.embedding_user = None
-        self.embedding_item = None
+        self.negative_sample_size = config.num_negative
 
         self.affine_output = torch.nn.Linear(
             in_features=self.latent_dim,
@@ -26,15 +24,16 @@ class GMFModel(PyTorchModel):
 
         self.criterion = nn.BCELoss()
 
-    def fit(self, dataset):
+    def fit(self, dataset_metadata):
 
         self.optimizer = use_optimizer(self.config,
                                        self)
 
-        self.dataset = dataset
-        # FIXME
-        num_users = self.dataset.userId.max() + 1
-        num_items = self.dataset.itemId.max() + 1
+        self.dataset_metadata = dataset_metadata
+        self.dataset = dataset_metadata.dataset
+
+        num_users = self.dataset_metadata.num_user
+        num_items = self.dataset_metadata.num_item
 
         self.embedding_user = torch.nn.Embedding(
             num_embeddings=num_users,
@@ -44,7 +43,6 @@ class GMFModel(PyTorchModel):
             num_embeddings=num_items,
             embedding_dim=self.latent_dim)
 
-        self.negative_sample_size = self.num_negative
         self.negatives = self._sample_negative(self.dataset)
 
         print('Range of userId is [{}, {}]'.format(
@@ -58,7 +56,7 @@ class GMFModel(PyTorchModel):
             print('Epoch {} starts !'.format(epoch))
             print('-' * 80)
             train_loader = self.instance_a_train_loader(self.dataset,
-                                                        self.num_negative,
+                                                        self.negative_sample_size,
                                                         self.batch_size)
             self.train_an_epoch(train_loader, epoch_id=epoch)
 
@@ -83,6 +81,17 @@ class GMFModel(PyTorchModel):
                                         target_tensor=torch.FloatTensor(ratings))
         return DataLoader(dataset, batch_size=batch_size, shuffle=True)
 
+    def train_single_batch(self, users, items, ratings):
+        if self.cuda is True:
+            users, items, ratings = users.cuda(), items.cuda(), ratings.cuda()
+        self.optimizer.zero_grad()
+        ratings_pred = self(users, items)
+        loss = self.criterion(ratings_pred.view(-1), ratings)
+        loss.backward()
+        self.optimizer.step()
+        loss = loss.item()
+        return loss
+
     def _sample_negative(self, ratings):
         """return all negative items & 100 sampled negative items"""
         interact_status = ratings \
@@ -99,7 +108,7 @@ class GMFModel(PyTorchModel):
         user_embedding = self.embedding_user(user_indices)
         item_embedding = self.embedding_item(item_indices)
         element_product = torch.mul(user_embedding, item_embedding)
-        logits = self.affine_output(element_product)
-        rating = self.logistic(logits)
+        dot = self.affine_output(element_product)
+        rating = self.logistic(dot)
         return rating
 

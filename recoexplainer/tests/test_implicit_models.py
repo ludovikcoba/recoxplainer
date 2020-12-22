@@ -9,8 +9,8 @@ from recoexplainer.models.bpr_model import BPR
 class ALSTest(unittest.TestCase):
 
     def setUp(self):
-        self.als = ALS(**cfg.model)
-        self.bpr = BPR(**cfg.model)
+        self.als = ALS(**cfg.model.als)
+        self.bpr = BPR(**cfg.model.bpr)
         self.data = DataReader(cfg.testdata)
         self.data.make_consecutive_ids_in_dataset()
         self.data.binarize()

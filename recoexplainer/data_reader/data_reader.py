@@ -7,12 +7,18 @@ class DataReader:
     def __init__(self, cfg):
         self.config = cfg
         self._dataset = None
+        self._num_user = None
+        self._num_item = None
+        self.dataset
 
     @property
     def dataset(self):
         if self._dataset is None:
             self._dataset = pd.read_csv(**self.config,
                                         engine='python')
+            self._num_item = int(self._dataset[['itemId']].nunique())
+            self._num_user = int(self._dataset[['userId']].nunique())
+
         return self._dataset
 
     @property
@@ -32,6 +38,7 @@ class DataReader:
         return self.config.get("sep", ",")
 
     def make_consecutive_ids_in_dataset(self):
+        # TODO: create mapping function
         dataset = self.dataset.rename({
                     "userId": "user_id",
                     "itemId": "item_id"
@@ -59,7 +66,9 @@ class DataReader:
         self._dataset = self.dataset[
             ['userId', 'itemId', 'rating', 'timestamp']
         ]
-        return self
+
+        self._dataset.userId = [int(i) for i in self._dataset.userId]
+        self._dataset.itemId = [int(i) for i in self._dataset.itemId]
 
     def binarize(self):
         """binarize into 0 or 1, imlicit feedback"""
@@ -68,25 +77,9 @@ class DataReader:
 
     @property
     def num_user(self):
-        user_id = self.dataset[['userId']].drop_duplicates().reindex()
-        return len(user_id)
+        return self._num_user
 
     @property
     def num_item(self):
-        item_id = self.dataset[['itemId']].drop_duplicates().reindex()
-        return len(item_id)
+        return self._num_item
 
-    @property
-    def userIds(self):
-        return self.dataset[['userId']]
-
-    @property
-    def itemIds(self):
-        return self.dataset[['itemId']]
-
-    def dataset_info(self):
-        """Print the number users and the items domain."""
-        print('Range of userId is [{}, {}]'.format(self.userIds.min(),
-                                                   self.userIds.max()))
-        print('Range of itemId is [{}, {}]'.format(self.itemIds.min(),
-                                                   self.itemIds.max()))
