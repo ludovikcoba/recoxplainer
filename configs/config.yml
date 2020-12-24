@@ -4,11 +4,15 @@ base:
     sep: '\t'
     skiprows: 1
     names: [ 'userId', 'itemId', 'rating', 'timestamp']
-  data:
+  ml100k:
       filepath_or_buffer: 'datasets/ml-100k/u.data'
       sep: '\t'
       skiprows: 1
       names: [ 'userId', 'itemId', 'rating', 'timestamp']
+  ml1m:
+    filepath_or_buffer: 'datasets/ml-1m/ratings.dat'
+    sep: '::'
+    names: [ 'userId', 'itemId', 'rating', 'timestamp' ]
   model:
     gmf:
       learning_rate: 0.01
@@ -16,7 +20,7 @@ base:
       latent_dim: 100
       epochs: 10
       num_negative: 10
-      batch_size: 512
+      batch_size: 64
       cuda: False
       optimizer: 'adam'
     als:
@@ -30,14 +34,27 @@ base:
       epochs: 10
       reg_term: 0
     emf:
-      learning_rate: 0.01
+      learning_rate: 0.001
       reg_term: 0.01
-      exp_reg_term: 0.01
-      latent_dim: 100
+      expl_reg_term: 0.001
+      latent_dim: 80
       epochs: 10
       momentum: 0.0
       weight_decay: 0.0
-      batch_size: 512
+      batch_size: 64
+      cuda: False
+      optimizer: 'sgd'
+      positive_threshold: 3
+      nn: 10
+    mf:
+      learning_rate: 0.001
+      reg_term: 0.000
+      expl_reg_term: 0.0
+      latent_dim: 80
+      epochs: 10
+      momentum: 0.0
+      weight_decay: 0.0
+      batch_size: 64
       cuda: False
       optimizer: 'sgd'
       positive_threshold: 3

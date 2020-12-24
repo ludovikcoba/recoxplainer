@@ -1,12 +1,14 @@
+import random
+
+import pandas as pd
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader
+from tqdm.auto import tqdm
+
+from recoexplainer.data_reader.user_item_rating_dataset import UserItemRatingDataset
 from recoexplainer.models.py_torch_model import PyTorchModel
 from recoexplainer.utils.torch_utils import use_optimizer
-from recoexplainer.data_reader.user_item_rating_dataset import UserItemRatingDataset
-
-import torch
-from torch.utils.data import DataLoader
-import torch.nn as nn
-import pandas as pd
-import random
 
 
 class GMFModel(PyTorchModel):
@@ -52,13 +54,14 @@ class GMFModel(PyTorchModel):
             self.dataset.itemId.min(),
             self.dataset.itemId.max()))
 
-        for epoch in range(self.epochs):
-            print('Epoch {} starts !'.format(epoch))
-            print('-' * 80)
-            train_loader = self.instance_a_train_loader(self.dataset,
-                                                        self.negative_sample_size,
-                                                        self.batch_size)
-            self.train_an_epoch(train_loader, epoch_id=epoch)
+        with tqdm(total=self.epochs) as progress:
+            for epoch in range(self.epochs):
+                train_loader = self.instance_a_train_loader(self.dataset,
+                                                            self.negative_sample_size,
+                                                            self.batch_size)
+                loss = self.train_an_epoch(train_loader)
+                progress.update(1)
+                progress.set_postfix({"loss": loss})
 
         return True
 
@@ -80,6 +83,19 @@ class GMFModel(PyTorchModel):
                                         item_tensor=torch.LongTensor(items),
                                         target_tensor=torch.FloatTensor(ratings))
         return DataLoader(dataset, batch_size=batch_size, shuffle=True)
+
+    def train_an_epoch(self, train_loader):
+        self.train()
+        cnt = 0
+        total_loss = 0
+        for batch_id, batch in enumerate(train_loader):
+            assert isinstance(batch[0], torch.LongTensor)
+            user, item, rating = batch[0], batch[1], batch[2]
+            rating = rating.float()
+            loss = self.train_single_batch(user, item, rating)
+            total_loss += loss
+            cnt += 1
+        return total_loss / cnt
 
     def train_single_batch(self, users, items, ratings):
         if self.cuda is True:

@@ -1,12 +1,16 @@
-from recoexplainer.models.py_torch_model import PyTorchModel
-from recoexplainer.utils.torch_utils import use_optimizer
-from recoexplainer.data_reader.user_item_rating_dataset import UserItemRatingDataset
-
-import torch
-from torch.utils.data import DataLoader
-import torch.nn as nn
-import pandas as pd
 import numpy as np
+import torch
+import torch.nn as nn
+from scipy import sparse
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.preprocessing import MinMaxScaler
+from torch.utils.data import DataLoader
+from tqdm.auto import tqdm
+
+from recoexplainer.data_reader.user_item_rating_dataset import UserItemRatingDataset
+from recoexplainer.models.py_torch_model import PyTorchModel
+from recoexplainer.utils.emp_loss import EMFLoss
+from recoexplainer.utils.torch_utils import use_optimizer
 
 
 class EMFModel(PyTorchModel):
@@ -16,15 +20,14 @@ class EMFModel(PyTorchModel):
         super().__init__(config)
 
         self.reg_term = config.reg_term
-        self.exp_reg_term = config.exp_reg_term
+        self.expl_reg_term = config.expl_reg_term
         self.positive_threshold = config.positive_threshold
 
         self.affine_output = nn.Linear(
             in_features=self.latent_dim,
             out_features=1)
 
-
-        self.criterion = self.constrained_loss()
+        self.criterion = EMFLoss()
 
     def fit(self, dataset_metadata):
 
@@ -44,8 +47,6 @@ class EMFModel(PyTorchModel):
             num_embeddings=num_items,
             embedding_dim=self.latent_dim)
 
-        self.compute_explainability()
-
         print('Range of userId is [{}, {}]'.format(
             self.dataset.userId.min(),
             self.dataset.userId.max()))
@@ -53,50 +54,73 @@ class EMFModel(PyTorchModel):
             self.dataset.itemId.min(),
             self.dataset.itemId.max()))
 
-        for epoch in range(self.epochs):
-            print('Epoch {} starts !'.format(epoch))
-            print('-' * 80)
-            train_loader = self.instance_a_train_loader(self.dataset,
-                                                        self.num_negative,
-                                                        self.batch_size)
-            self.train_an_epoch(train_loader, epoch_id=epoch)
+        self.compute_explainability()
 
+        with tqdm(total=self.epochs) as progress:
+            for epoch in range(self.epochs):
+                train_loader = self.instance_a_train_loader(self.batch_size)
+                loss = self.train_an_epoch(train_loader)
+                progress.update(1)
+                progress.set_postfix({"loss": loss})
         return True
-
-    def constrained_loss(self, users, items, ratings):
-        user_embeddings = self.embedding_user(users)
-        item_embeddings = self.embedding_item(items)
-        ratings_pred = self(users, items)
-        loss = (ratings_pred - ratings) ** 2 \
-               + self.reg_term * torch.norm(user_embeddings, 2, -1) \
-               + self.reg_term * torch.norm(item_embeddings, 2, -1) \
-               + self.exp_reg_term * torch.abs(user_embeddings - item_embeddings) * self.explainability(users, items)
-
-        return loss.mean()
 
     def compute_explainability(self):
         ds = self.dataset.pivot(index='userId', columns='itemId', values='rating')
         ds = ds.fillna(0)
-        ds = ds.to_numpy()
-        ds = torch.from_numpy(ds)
-        ds = ds / ds.norm(dim=1)[:, None]
-        sim = torch.mm(ds, ds.transpose(0, 1))
+        ds = sparse.csr_matrix(ds)
+        sim_matrix = cosine_similarity(ds)
+        min_val = sim_matrix.min() - 1
 
-        for i in range(self.dataset.userId.max() + 1):
-            pass
-        # TODO: steopped here
+        sim_users = {}
+
+        for i in range(self.dataset_metadata.num_user):
+            sim_matrix[i, i] = min_val
+
+            nn_most_sim_users_to_i = (-sim_matrix[i, :]).argsort()[:self.config.nn]
+            sim_users[i] = nn_most_sim_users_to_i
+
+        self.explainability_matrix = np.zeros((self.dataset_metadata.num_user,
+                                               self.dataset_metadata.num_item))
+
         filter_dataset_on_threshold = self.dataset[
             self.dataset['rating'] >= self.positive_threshold
-        ]
+            ]
 
+        for i in range(self.dataset_metadata.num_user):
+            nn_most_sim_users_to_i = sim_users[i]
 
-    @staticmethod
-    def instance_a_train_loader(self, dataset, batch_size):
+            rated_items_by_sim_users = filter_dataset_on_threshold[
+                filter_dataset_on_threshold['userId'].isin(nn_most_sim_users_to_i)]
+
+            sim_scores = rated_items_by_sim_users.groupby(by='itemId')
+            sim_scores = sim_scores['rating'].sum()
+            sim_scores = sim_scores.reset_index()
+
+            self.explainability_matrix[i, sim_scores.itemId] = sim_scores.rating.to_list()
+
+        self.explainability_matrix = MinMaxScaler().fit_transform(self.explainability_matrix)
+
+        self.explainability_matrix = torch.from_numpy(self.explainability_matrix)
+
+    def instance_a_train_loader(self, batch_size):
         """instance train loader for one training epoch"""
-        dataset = UserItemRatingDataset(user_tensor=torch.LongTensor(dataset.userId),
-                                        item_tensor=torch.LongTensor(dataset.itemId),
-                                        target_tensor=torch.FloatTensor(dataset.ratings))
+        dataset = UserItemRatingDataset(user_tensor=torch.LongTensor(self.dataset.userId),
+                                        item_tensor=torch.LongTensor(self.dataset.itemId),
+                                        target_tensor=torch.FloatTensor(self.dataset.rating))
         return DataLoader(dataset, batch_size=batch_size, shuffle=True)
+
+    def train_an_epoch(self, train_loader):
+        self.train()
+        cnt = 0
+        total_loss = 0
+        for batch_id, batch in enumerate(train_loader):
+            assert isinstance(batch[0], torch.LongTensor)
+            user, item, rating = batch[0], batch[1], batch[2]
+            rating = rating.float()
+            loss = self.train_single_batch(user, item, rating)
+            total_loss += loss
+            cnt += 1
+        return total_loss / cnt
 
     def train_single_batch(self, users, items, ratings):
         if self.cuda is True:
@@ -104,12 +128,20 @@ class EMFModel(PyTorchModel):
 
         self.optimizer.zero_grad()
 
-        loss = self.criterion(users, users, ratings)
+        ratings_pred = self(users, items)
 
+        user_embeddings = self.embedding_user(users)
+        item_embeddings = self.embedding_item(items)
+
+        loss = self.criterion(ratings_pred=ratings_pred,
+                              ratings=ratings,
+                              u=user_embeddings,
+                              v=item_embeddings,
+                              reg_term=self.reg_term,
+                              expl=self.explainability_matrix[users, items],
+                              expl_reg_term=self.expl_reg_term)
         loss.backward()
-
         self.optimizer.step()
-
         loss = loss.item()
 
         return loss
@@ -117,5 +149,6 @@ class EMFModel(PyTorchModel):
     def forward(self, user_indices, item_indices):
         user_embeddings = self.embedding_user(user_indices)
         item_embeddings = self.embedding_item(item_indices)
-        rating = torch.affine_output(user_embeddings, item_embeddings)
+        element_product = torch.mul(user_embeddings, item_embeddings)
+        rating = self.affine_output(element_product)
         return rating

@@ -1,7 +1,6 @@
 import torch
-import torch.nn as nn
 
-from recoexplainer.utils.torch_utils import use_optimizer, use_cuda
+from recoexplainer.utils.torch_utils import use_cuda
 
 
 class PyTorchModel(torch.nn.Module):
@@ -33,18 +32,6 @@ class PyTorchModel(torch.nn.Module):
         self.embedding_item = None
 
         super().__init__()
-
-    def train_an_epoch(self, train_loader, epoch_id):
-        self.train()
-        total_loss = 0
-        for batch_id, batch in enumerate(train_loader):
-            assert isinstance(batch[0], torch.LongTensor)
-            user, item, rating = batch[0], batch[1], batch[2]
-            rating = rating.float()
-            loss = self.train_single_batch(user, item, rating)
-            if batch_id % 200 == 0:
-                print('[Training Epoch {}] Batch {}, Loss {}'.format(epoch_id, batch_id, loss))
-            total_loss += loss
 
     def user_embedding(self):
         return self.state_dict()['embedding_user.weight'].cpu().numpy()
