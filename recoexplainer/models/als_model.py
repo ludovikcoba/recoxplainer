@@ -1,5 +1,6 @@
-from recoexplainer.models.mf_implicit_model import MFImplicitModel
 import implicit
+
+from .mf_implicit_model import MFImplicitModel
 
 
 class ALS(MFImplicitModel):

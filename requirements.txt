@@ -3,4 +3,7 @@ numpy==1.19.2
 pandas==1.1.5
 scipy==1.5.4
 implicit==0.4.4
-python-box==5.2.0
+torch==1.7.1
+scikit-learn==0.24.0
+tqdm==4.54.1
+yaml==0.2.5

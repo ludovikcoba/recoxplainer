@@ -7,8 +7,8 @@ from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 
 from recoexplainer.data_reader.user_item_rating_dataset import UserItemRatingDataset
-from recoexplainer.models.py_torch_model import PyTorchModel
 from recoexplainer.utils.torch_utils import use_optimizer
+from .py_torch_model import PyTorchModel
 
 
 class GMFModel(PyTorchModel):

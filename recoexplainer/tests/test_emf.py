@@ -2,7 +2,7 @@ import unittest
 
 from recoexplainer.config import cfg
 from recoexplainer.data_reader.data_reader import DataReader
-from recoexplainer.models.emf_model import EMFModel
+from recoexplainer.models import EMFModel
 
 
 class EMFTest(unittest.TestCase):
