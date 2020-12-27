@@ -15,13 +15,38 @@ from .py_torch_model import PyTorchModel
 
 class EMFModel(PyTorchModel):
 
-    def __init__(self, config):
+    def __init__(self,
+                 learning_rate: float,
+                 reg_term: float,
+                 expl_reg_term: float,
+                 positive_threshold: float,
+                 momentum: float,
+                 weight_decay: float,
+                 latent_dim: int,
+                 epochs: int,
+                 batch_size: int,
+                 knn: int,
+                 cuda: bool,
+                 optimizer_name: str,
+                 device_id=None
+                 ):
 
-        super().__init__(config)
+        super().__init__(
+            learning_rate=learning_rate,
+            latent_dim=latent_dim,
+            epochs=epochs,
+            batch_size=batch_size,
+            cuda=cuda,
+            optimizer_name=optimizer_name,
+            device_id=device_id
+        )
 
-        self.reg_term = config.reg_term
-        self.expl_reg_term = config.expl_reg_term
-        self.positive_threshold = config.positive_threshold
+        self.reg_term = reg_term
+        self.expl_reg_term = expl_reg_term
+        self.positive_threshold = positive_threshold
+        self.momentum = momentum
+        self.weight_decay = weight_decay
+        self.knn = knn
 
         self.affine_output = nn.Linear(
             in_features=self.latent_dim,
@@ -31,8 +56,12 @@ class EMFModel(PyTorchModel):
 
     def fit(self, dataset_metadata):
 
-        self.optimizer = use_optimizer(self.config,
-                                       self)
+        self.optimizer = use_optimizer(network=self,
+                                       learning_rate=self.learning_rate,
+                                       momentum=self.momentum,
+                                       weight_decay=self.weight_decay,
+                                       optimizer=self.optimizer_name)
+
         self.dataset_metadata = dataset_metadata
         self.dataset = dataset_metadata.dataset
         # FIXME
@@ -46,13 +75,6 @@ class EMFModel(PyTorchModel):
         self.embedding_item = nn.Embedding(
             num_embeddings=num_items,
             embedding_dim=self.latent_dim)
-
-        print('Range of userId is [{}, {}]'.format(
-            self.dataset.userId.min(),
-            self.dataset.userId.max()))
-        print('Range of itemId is [{}, {}]'.format(
-            self.dataset.itemId.min(),
-            self.dataset.itemId.max()))
 
         self.compute_explainability()
 
@@ -76,8 +98,8 @@ class EMFModel(PyTorchModel):
         for i in range(self.dataset_metadata.num_user):
             sim_matrix[i, i] = min_val
 
-            nn_most_sim_users_to_i = (-sim_matrix[i, :]).argsort()[:self.config.nn]
-            sim_users[i] = nn_most_sim_users_to_i
+            knn_to_user_i = (-sim_matrix[i, :]).argsort()[:self.knn]
+            sim_users[i] = knn_to_user_i
 
         self.explainability_matrix = np.zeros((self.dataset_metadata.num_user,
                                                self.dataset_metadata.num_item))
@@ -87,10 +109,10 @@ class EMFModel(PyTorchModel):
             ]
 
         for i in range(self.dataset_metadata.num_user):
-            nn_most_sim_users_to_i = sim_users[i]
+            knn_to_user_i = sim_users[i]
 
             rated_items_by_sim_users = filter_dataset_on_threshold[
-                filter_dataset_on_threshold['userId'].isin(nn_most_sim_users_to_i)]
+                filter_dataset_on_threshold['userId'].isin(knn_to_user_i)]
 
             sim_scores = rated_items_by_sim_users.groupby(by='itemId')
             sim_scores = sim_scores['rating'].sum()

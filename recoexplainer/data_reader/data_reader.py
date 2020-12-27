@@ -4,8 +4,16 @@ import pandas as pd
 
 class DataReader:
 
-    def __init__(self, cfg):
-        self.config = cfg
+    def __init__(self,
+                 filepath_or_buffer: str,
+                 sep: str,
+                 names: list,
+                 skiprows: int = 0):
+        self.filepath_or_buffer = filepath_or_buffer
+        self.sep = sep
+        self.names = names
+        self.skiprows = skiprows
+
         self._dataset = None
         self._num_user = None
         self._num_item = None
@@ -14,28 +22,15 @@ class DataReader:
     @property
     def dataset(self):
         if self._dataset is None:
-            self._dataset = pd.read_csv(**self.config,
+            self._dataset = pd.read_csv(filepath_or_buffer=self.filepath_or_buffer,
+                                        sep=self.sep,
+                                        names=self.names,
+                                        skiprows=self.skiprows,
                                         engine='python')
             self._num_item = int(self._dataset[['itemId']].nunique())
             self._num_user = int(self._dataset[['userId']].nunique())
 
         return self._dataset
-
-    @property
-    def path(self):
-        return self.config['path']
-
-    @property
-    def header(self):
-        return self.config.get('header', 'infer')
-
-    @property
-    def names(self):
-        return self.config.get('names')
-
-    @property
-    def sep(self):
-        return self.config.get("sep", ",")
 
     def make_consecutive_ids_in_dataset(self):
         # TODO: create mapping function
@@ -60,8 +55,8 @@ class DataReader:
             self._dataset, item_id,
             on=['item_id'], how='left')
 
-        self.origina_user_id = user_id
-        self.origina_item_id = item_id
+        self.original_user_id = user_id
+        self.original_item_id = item_id
 
         self._dataset = self.dataset[
             ['userId', 'itemId', 'rating', 'timestamp']

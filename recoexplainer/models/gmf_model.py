@@ -13,11 +13,28 @@ from .py_torch_model import PyTorchModel
 
 class GMFModel(PyTorchModel):
 
-    def __init__(self, config):
+    def __init__(self,
+                 learning_rate: int,
+                 weight_decay: int,
+                 latent_dim: int,
+                 epochs: int,
+                 num_negative: int,
+                 batch_size: int,
+                 cuda: bool,
+                 optimizer_name: str,
+                 device_id=None):
 
-        super().__init__(config)
+        super().__init__(
+            learning_rate=learning_rate,
+            latent_dim=latent_dim,
+            epochs=epochs,
+            batch_size=batch_size,
+            cuda=cuda,
+            optimizer_name=optimizer_name,
+            device_id=device_id)
 
-        self.negative_sample_size = config.num_negative
+        self.negative_sample_size = num_negative
+        self.weight_decay = weight_decay
 
         self.affine_output = torch.nn.Linear(
             in_features=self.latent_dim,
@@ -28,14 +45,15 @@ class GMFModel(PyTorchModel):
 
     def fit(self, dataset_metadata):
 
-        self.optimizer = use_optimizer(self.config,
-                                       self)
+        self.optimizer = use_optimizer(network=self,
+                                       weight_decay=self.weight_decay,
+                                       learning_rate=self.learning_rate,
+                                       optimizer=self.optimizer_name
+                                       )
+        dataset = dataset_metadata.dataset
 
-        self.dataset_metadata = dataset_metadata
-        self.dataset = dataset_metadata.dataset
-
-        num_users = self.dataset_metadata.num_user
-        num_items = self.dataset_metadata.num_item
+        num_users = dataset_metadata.num_user
+        num_items = dataset_metadata.num_item
 
         self.embedding_user = torch.nn.Embedding(
             num_embeddings=num_users,
@@ -45,18 +63,11 @@ class GMFModel(PyTorchModel):
             num_embeddings=num_items,
             embedding_dim=self.latent_dim)
 
-        self.negatives = self._sample_negative(self.dataset)
-
-        print('Range of userId is [{}, {}]'.format(
-            self.dataset.userId.min(),
-            self.dataset.userId.max()))
-        print('Range of itemId is [{}, {}]'.format(
-            self.dataset.itemId.min(),
-            self.dataset.itemId.max()))
+        self.negatives = self._sample_negative(dataset)
 
         with tqdm(total=self.epochs) as progress:
             for epoch in range(self.epochs):
-                train_loader = self.instance_a_train_loader(self.dataset,
+                train_loader = self.instance_a_train_loader(dataset,
                                                             self.negative_sample_size,
                                                             self.batch_size)
                 loss = self.train_an_epoch(train_loader)

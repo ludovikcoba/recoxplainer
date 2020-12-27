@@ -16,13 +16,13 @@ base:
   model:
     gmf:
       learning_rate: 0.01
-      weight_decay: 0
+      weight_decay: 0.0
       latent_dim: 100
       epochs: 10
       num_negative: 10
       batch_size: 256
       cuda: False
-      optimizer: 'adam'
+      optimizer_name: 'adam'
     als:
       learning_rate: 0.01
       latent_dim: 100
@@ -32,7 +32,7 @@ base:
       learning_rate: 0.01
       latent_dim: 100
       epochs: 10
-      reg_term: 0
+      reg_term: 0.0
     emf:
       learning_rate: 0.001
       reg_term: 0.01
@@ -43,9 +43,9 @@ base:
       weight_decay: 0.0
       batch_size: 64
       cuda: False
-      optimizer: 'sgd'
+      optimizer_name: 'sgd'
       positive_threshold: 3
-      nn: 10
+      knn: 10
     mf:
       learning_rate: 0.001
       reg_term: 0.000
@@ -56,7 +56,7 @@ base:
       weight_decay: 0.0
       batch_size: 64
       cuda: False
-      optimizer: 'sgd'
+      optimizer_name: 'sgd'
       positive_threshold: 3
       nn: 10
 

@@ -1,5 +1,7 @@
-import torch
 import itertools
+
+import torch
+
 from recoexplainer.utils.torch_utils import use_cuda
 
 
@@ -9,26 +11,33 @@ class PyTorchModel(torch.nn.Module):
     Note: Subclass should implement self.model !
     """
 
-    def __init__(self, config):
+    def __init__(self,
+                 learning_rate: float,
+                 latent_dim: int,
+                 epochs: int,
+                 batch_size: int,
+                 cuda: bool,
+                 optimizer_name: str,
+                 device_id=None):
 
-        if config.optimizer not in ['sgd', 'adam', 'rmsprop']:
+        if optimizer_name not in ['sgd', 'adam', 'rmsprop']:
             raise Exception["Wrong optimizer."]
 
-        if config.cuda is True:
-            use_cuda(True, config.device_id)
+        if cuda is True:
+            use_cuda(True, device_id)
 
-        self.config = config
-
-        self.latent_dim = config.latent_dim
-        self.learning_rate = config.learning_rate
-        self.epochs = config.epochs
-        self.batch_size = config.batch_size
-        self.cuda = config.cuda
+        self.latent_dim = latent_dim
+        self.learning_rate = learning_rate
+        self.epochs = epochs
+        self.batch_size = batch_size
+        self.cuda = cuda
+        self.optimizer_name = optimizer_name
 
         self.dataset = None
         self.dataset_metadata = None
         self.embedding_user = None
         self.embedding_item = None
+        self.optimizer = None
 
         super().__init__()
 

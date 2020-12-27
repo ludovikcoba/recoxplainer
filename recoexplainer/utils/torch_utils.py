@@ -23,20 +23,26 @@ def use_cuda(enabled, device_id=0):
         torch.cuda.set_device(device_id)
 
 
-def use_optimizer(config,
-                  network):
-    if config.optimizer == 'sgd':
+def use_optimizer(optimizer,
+                  learning_rate: float = None,
+                  momentum: float = None,
+                  weight_decay: float = None,
+                  alpha: float = None,
+                  network: torch.nn.Module = None):
+    if optimizer == 'sgd':
         optimizer = torch.optim.SGD(network.parameters(),
-                                    lr=config.learning_rate,
-                                    momentum=config.momentum,
-                                    weight_decay=config.weight_decay)
-    elif config.optimizer == 'adam':
+                                    lr=learning_rate,
+                                    momentum=momentum,
+                                    weight_decay=weight_decay)
+
+    elif optimizer == 'adam':
         optimizer = torch.optim.Adam(network.parameters(),
-                                     lr=config.learning_rate,
-                                     weight_decay=config.weight_decay)
-    elif config.optimizer == 'rmsprop':
+                                     lr=learning_rate,
+                                     weight_decay=weight_decay)
+
+    elif optimizer == 'rmsprop':
         optimizer = torch.optim.RMSprop(network.parameters(),
-                                        lr=config.learning_rate,
-                                        alpha=config.alpha,
-                                        momentum=config.momentum)
+                                        lr=learning_rate,
+                                        alpha=alpha,
+                                        momentum=momentum)
     return optimizer

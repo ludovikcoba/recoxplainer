@@ -1,13 +1,13 @@
+import unittest
+
 from recoexplainer.config import cfg
 from recoexplainer.data_reader.data_reader import DataReader
-
-import unittest
 
 
 class TestDataReader(unittest.TestCase):
 
     def setUp(self) -> None:
-        self.data = DataReader(cfg.testdata)
+        self.data = DataReader(**cfg.testdata)
 
     def test_import(self):
 
