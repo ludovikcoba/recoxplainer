@@ -25,6 +25,11 @@ class Explainer:
         return self.recommendations
 
     def get_user_items(self, user_id):
+        """
+        Items Ids rated by a user.
+        :param user_id: the user
+        :return: list
+        """
         return self.users.get_group(user_id).itemId.values
 
     def explain_recommendation_to_user(self, user_id: int, item_id: int):
