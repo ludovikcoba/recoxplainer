@@ -48,6 +48,9 @@ class EMFModel(PyTorchModel):
         self.weight_decay = weight_decay
         self.knn = knn
 
+        self.explainability_matrix = None
+        self.sim_users = {}
+
         self.affine_output = nn.Linear(
             in_features=self.latent_dim,
             out_features=1)
@@ -64,7 +67,7 @@ class EMFModel(PyTorchModel):
 
         self.dataset_metadata = dataset_metadata
         self.dataset = dataset_metadata.dataset
-        # FIXME
+
         num_users = self.dataset_metadata.num_user
         num_items = self.dataset_metadata.num_item
 
@@ -93,13 +96,11 @@ class EMFModel(PyTorchModel):
         sim_matrix = cosine_similarity(ds)
         min_val = sim_matrix.min() - 1
 
-        sim_users = {}
-
         for i in range(self.dataset_metadata.num_user):
             sim_matrix[i, i] = min_val
 
             knn_to_user_i = (-sim_matrix[i, :]).argsort()[:self.knn]
-            sim_users[i] = knn_to_user_i
+            self.sim_users[i] = knn_to_user_i
 
         self.explainability_matrix = np.zeros((self.dataset_metadata.num_user,
                                                self.dataset_metadata.num_item))
@@ -109,7 +110,7 @@ class EMFModel(PyTorchModel):
             ]
 
         for i in range(self.dataset_metadata.num_user):
-            knn_to_user_i = sim_users[i]
+            knn_to_user_i = self.sim_users[i]
 
             rated_items_by_sim_users = filter_dataset_on_threshold[
                 filter_dataset_on_threshold['userId'].isin(knn_to_user_i)]

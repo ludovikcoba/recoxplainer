@@ -35,8 +35,8 @@ base:
       reg_term: 0.0
     emf:
       learning_rate: 0.001
-      reg_term: 0.01
-      expl_reg_term: 0.001
+      reg_term: 0.001
+      expl_reg_term: 0.01
       latent_dim: 80
       epochs: 10
       momentum: 0.0
