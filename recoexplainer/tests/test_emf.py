@@ -3,7 +3,7 @@ import unittest
 from recoexplainer.config import cfg
 from recoexplainer.data_reader.data_reader import DataReader
 from recoexplainer.models import EMFModel
-from recoexplainer.recommender import RankPredictionsRecommender
+from recoexplainer.recommender import Recommender
 
 
 class EMFTest(unittest.TestCase):
@@ -15,5 +15,5 @@ class EMFTest(unittest.TestCase):
 
     def test_train_emf(self):
         self.assertTrue(self.emf.fit(self.data))
-        recommender = RankPredictionsRecommender(self.data, self.emf)
+        recommender = Recommender(self.data, self.emf)
         recommender.recommend_all()

@@ -32,6 +32,10 @@ class DataReader:
 
         return self._dataset
 
+    @dataset.setter
+    def dataset(self, new_data):
+        self._dataset = new_data
+
     def make_consecutive_ids_in_dataset(self):
         # TODO: create mapping function
         dataset = self.dataset.rename({
@@ -65,10 +69,11 @@ class DataReader:
         self._dataset.userId = [int(i) for i in self._dataset.userId]
         self._dataset.itemId = [int(i) for i in self._dataset.itemId]
 
-    def binarize(self):
+    def binarize(self, binary_threshold=1):
         """binarize into 0 or 1, imlicit feedback"""
-        self._dataset['rating'][self._dataset['rating'] > 0] = 1.0
-        self._dataset = self._dataset[self._dataset['rating'] > 0]
+
+        self._dataset = self._dataset[self._dataset['rating'] > binary_threshold]
+        self._dataset['rating'] = 1.0
 
     @property
     def num_user(self):

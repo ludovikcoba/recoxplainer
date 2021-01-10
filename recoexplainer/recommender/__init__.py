@@ -1,3 +1,3 @@
-from .ranked_predictions_recommender import RankPredictionsRecommender
+from .recommender import Recommender
 
-__all__ = ['RankPredictionsRecommender']
+__all__ = ['Recommender']

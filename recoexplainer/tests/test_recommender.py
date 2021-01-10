@@ -3,7 +3,7 @@ import unittest
 from recoexplainer.config import cfg
 from recoexplainer.data_reader.data_reader import DataReader
 from recoexplainer.models.als_model import ALS
-from recoexplainer.recommender import RankPredictionsRecommender
+from recoexplainer.recommender import Recommender
 
 
 class RecommenderImplicitTest(unittest.TestCase):
@@ -15,8 +15,8 @@ class RecommenderImplicitTest(unittest.TestCase):
         self.data.make_consecutive_ids_in_dataset()
         self.data.binarize()
 
-        self.als.fit(self.data.dataset)
+        self.als.fit(self.data)
 
     def test_train_recommend_als(self):
-        recommender = RankPredictionsRecommender(self.data, self.als)
+        recommender = Recommender(self.data, self.als)
         recommender.recommend_all()

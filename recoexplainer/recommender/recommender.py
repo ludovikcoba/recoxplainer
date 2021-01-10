@@ -1,64 +1,44 @@
 import pandas as pd
-from tqdm.autonotebook import tqdm
+
+from .genericrecommender import GenericRecommender
 
 
-class Recommender:
+class Recommender(GenericRecommender):
 
     def __init__(self, dataset_metadata, model, top_n: int = 10):
-        self.top_n = top_n
-        self.dataset = dataset_metadata.dataset
-        self.model = model
-        self.catalogue = set(self.dataset['itemId'])
+        super(Recommender, self).__init__(dataset_metadata, model, top_n)
 
-    def recommend_all(self):
+    def get_predictions(self,
+                        user_id: int,
+                        target_item_id: list, ):
+        predictions = self.model.predict(user_id, target_item_id)
+        return predictions
+
+    def recommend(self, user_id: int,
+                  target_item_id: list):
         """
-        Get all recommendations.
-        :param top_n:
-        :return: recommendations for any user.
+        Generate recommendations on specific itemId and userId
+        :param user_id: list, user Ids
+        :param target_item_id: list, item Ids
+        :param rated_items: list, of rated interactions.
+        :return: data.frame [userId, itemId, rank], recommendations ranking for the specified pairs of userId and itemId.
+        """
+        predictions = self.get_predictions(user_id, target_item_id)
+
+        return self.rank_prediction(user_id, target_item_id, predictions)
+
+    def recommend_user(self, user_id: int = None, user_ratings: pd.DataFrame = None):
+        """
+        Get recommendations for a user.
+        :param user_id: int, a user Id
+        :param user_ratings: list, interactions on the user
+        :return: dataframe [userId, itemId, rank], recommendations ranking for the specified userId.
         """
 
-        ratings = self.dataset.groupby('userId')
+        if user_ratings is None:
+            user_ratings = self.get_rated(user_id=user_id)
 
-        recommendations = pd.DataFrame({'userId': [], 'itemId': [], 'rank': []})
+        unrated_item_id = self.get_unrated(user_ratings['itemId'])
 
-        with tqdm(total=self.dataset['userId'].nunique(), desc="Recommending for users: ") as pbar:
-            for user_id, user_ratings in ratings:
-                recommendations = recommendations \
-                    .append(self.recommend_user(user_id, user_ratings))
-                pbar.update()
-
-        return recommendations
-
-    def rank_prediction(self, user_id, target_item_id, predictions):
-        recommendations = pd.DataFrame({'userId': user_id,
-                                        'itemId': target_item_id,
-                                        'prediction': predictions})
-
-        recommendations['rank'] = recommendations['prediction'] \
-            .rank(method='first', ascending=False)
-
-        recommendations \
-            .sort_values(['userId', 'rank'], inplace=True)
-
-        recommendations = recommendations[recommendations['rank'] <= self.top_n]
-
-        return recommendations[['userId', 'itemId', 'rank']]
-
-    def get_unrated(self, user_ratings):
-        """
-        Extract the set of items a user has not rated.
-        :param user_ratings: list, items rated.
-        :return: list, items not rated.
-        """
-        unrated_item_id = self.catalogue - set(user_ratings)
-        unrated_item_id = list(unrated_item_id)
-        return unrated_item_id
-
-    def get_rated(self, user_id):
-        """
-        Extract the set of items a user has not rated.
-        :param user_id: userId rated.
-        :return: list, rated items.
-        """
-        rated = self.dataset[self.dataset['userId'] == user_id]
-        return rated
+        return self.recommend(user_id=user_id,
+                              target_item_id=unrated_item_id)

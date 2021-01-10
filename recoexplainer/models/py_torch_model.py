@@ -41,6 +41,9 @@ class PyTorchModel(torch.nn.Module):
 
         super().__init__()
 
+    def fit(self):
+        pass
+
     def predict(self, user_id, item_id):
         if type(user_id) == 'int':
             user_id = [user_id]

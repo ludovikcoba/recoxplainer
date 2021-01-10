@@ -7,7 +7,7 @@ base:
   ml100k:
       filepath_or_buffer: 'datasets/ml-100k/u.data'
       sep: '\t'
-      skiprows: 1
+      skiprows: 0
       names: [ 'userId', 'itemId', 'rating', 'timestamp']
   ml1m:
     filepath_or_buffer: 'datasets/ml-1m/ratings.dat'
@@ -24,39 +24,29 @@ base:
       cuda: False
       optimizer_name: 'adam'
     als:
-      learning_rate: 0.01
+      learning_rate: 0.1
       latent_dim: 100
       epochs: 10
-      reg_term: 0
+      reg_term: 0.001
     bpr:
       learning_rate: 0.01
       latent_dim: 100
       epochs: 10
       reg_term: 0.0
     emf:
-      learning_rate: 0.001
+      learning_rate: 0.01
       reg_term: 0.001
-      expl_reg_term: 0.01
-      latent_dim: 80
-      epochs: 10
-      momentum: 0.0
-      weight_decay: 0.0
-      batch_size: 64
-      cuda: False
-      optimizer_name: 'sgd'
-      positive_threshold: 3
-      knn: 10
-    mf:
-      learning_rate: 0.001
-      reg_term: 0.000
       expl_reg_term: 0.0
       latent_dim: 80
       epochs: 10
-      momentum: 0.0
-      weight_decay: 0.0
-      batch_size: 64
-      cuda: False
-      optimizer_name: 'sgd'
       positive_threshold: 3
-      nn: 10
+      knn: 10
+    mf:
+      learning_rate: 0.01
+      reg_term: 0.001
+      expl_reg_term: 0.0
+      latent_dim: 80
+      epochs: 10
+      positive_threshold: 3
+      knn: 10
 

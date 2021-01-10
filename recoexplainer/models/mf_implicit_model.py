@@ -16,14 +16,15 @@ class MFImplicitModel:
 
     def fit(self, dataset):
         self.model.fit(
-            self.rearrange_dataset(dataset))
+            self.rearrange_dataset(ds=dataset.dataset,
+                                   num_user=dataset.num_user,
+                                   num_item=dataset.num_item))
         return True
 
     @staticmethod
-    def rearrange_dataset(ds):
+    def rearrange_dataset(ds, num_user, num_item):
         # todo: fix the max to something less troublesome.
-        ds_mtr = scipy.sparse.csr_matrix((ds['itemId'].max() + 1,
-                                          ds['userId'].max() + 1))
+        ds_mtr = scipy.sparse.csr_matrix((num_item, num_user))
         ds_mtr[ds['itemId'], ds['userId']] = 1
 
         return ds_mtr

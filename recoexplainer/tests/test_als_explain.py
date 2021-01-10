@@ -1,10 +1,11 @@
 import unittest
 
 from recoexplainer.config import cfg
-from recoexplainer.data_reader.data_reader import DataReader
-from recoexplainer.models.als_model import ALS
-from recoexplainer.explain.model_based_als_explain import ALSExplain
-from recoexplainer.recommender import RankPredictionsRecommender
+from recoexplainer.data_reader import DataReader
+from recoexplainer.models import ALS
+from recoexplainer.explain import ALSExplainer
+from recoexplainer.recommender import Recommender
+from recoexplainer.evaluator import Evaluator, Splitter
 
 
 class ALSTest(unittest.TestCase):
@@ -17,9 +18,15 @@ class ALSTest(unittest.TestCase):
         self.data.binarize()
 
     def test_explain_als(self):
-        self.assertTrue(self.als.fit(self.data.dataset))
-        recommender = RankPredictionsRecommender(self.data, self.als)
+        sp = Splitter()
+        train, test = sp.split_leave_n_out(self.data, n=1)
+        self.assertTrue(self.als.fit(train))
+        recommender = Recommender(self.data, self.als)
         recommendations = recommender.recommend_all()
-        explainer = ALSExplain()
-        explainer.explain_all(self.als, recommendations, self.data)
+
+        evaluator = Evaluator(test)
+        evaluator.cal_hit_ratio(recommendations)
+
+        explainer = ALSExplainer(self.als, recommendations, self.data)
+        explainer.explain_recommendations()
 

@@ -20,6 +20,7 @@ class KNNPostHocExplainer(Explainer):
 
     def get_rules_for_getting(self, item_id):
         if self.knn_items_dict is None:
+
             self.knn_items_dict = {}
             self.compute_knn_items_for_all_items()
 
