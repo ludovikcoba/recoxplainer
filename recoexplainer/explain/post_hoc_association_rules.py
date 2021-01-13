@@ -13,7 +13,9 @@ class ARPostHocExplainer(Explainer):
                  min_support=.1,
                  max_len=2,
                  metric="lift",
-                 min_threshold=.1):
+                 min_threshold=.1,
+                 min_confidence=.1,
+                 min_lift=.1):
 
         super(ARPostHocExplainer, self).__init__(model, recommendations, data)
         self.AR = None
@@ -21,6 +23,8 @@ class ARPostHocExplainer(Explainer):
         self.max_len = max_len
         self.metric = metric
         self.min_threshold = min_threshold
+        self.min_confidence = min_confidence
+        self.min_lift = min_lift
 
         self.rules = None
 
@@ -47,9 +51,11 @@ class ARPostHocExplainer(Explainer):
                                     use_colnames=True,
                                     max_len=self.max_len)
 
-        rules = association_rules(frequent_itemsets, metric="lift", min_threshold=.1)
-        rules = rules[(rules['confidence'] > 0.1) &
-                      (rules['lift'] > 0.1)]
+        rules = association_rules(frequent_itemsets,
+                                  metric="lift",
+                                  min_threshold=self.min_threshold)
+        rules = rules[(rules['confidence'] > self.min_confidence) &
+                      (rules['lift'] > self.min_lift)]
 
         rules.consequents = [list(row.consequents)[0] for _, row in rules.iterrows()]
         rules.antecedents = [list(row.antecedents)[0] for _, row in rules.iterrows()]
@@ -59,13 +65,10 @@ class ARPostHocExplainer(Explainer):
     def explain_recommendation_to_user(self, user_id: int, item_id: int):
 
         user_ratings = self.get_user_items(user_id)
-
         rules = self.get_rules_for_getting(item_id)
-
         explanations = rules[rules.antecedents.isin(user_ratings)]
 
-        return {"item": explanations.antecedents,
-                "confidence": explanations.confidence}
+        return {x for x in explanations.antecedents}
 
 
 

@@ -7,6 +7,7 @@ class Explainer:
         self.recommendations = recommendations
         self.dataset = data.dataset
         self.num_items = data.num_item
+        self.num_users = data.num_user
         self.users = self.dataset.groupby(by='userId')
 
     def explain_recommendations(self):

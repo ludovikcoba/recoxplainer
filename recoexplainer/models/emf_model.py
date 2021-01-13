@@ -202,12 +202,6 @@ class EMFTorchModel(PyTorchModel):
 
     def fit(self, dataset_metadata):
 
-        self.optimizer = use_optimizer(network=self,
-                                       learning_rate=self.learning_rate,
-                                       momentum=self.momentum,
-                                       weight_decay=self.weight_decay,
-                                       optimizer=self.optimizer_name)
-
         self.dataset_metadata = dataset_metadata
         self.dataset = dataset_metadata.dataset
 
@@ -223,6 +217,12 @@ class EMFTorchModel(PyTorchModel):
             embedding_dim=self.latent_dim)
 
         self.compute_explainability()
+
+        self.optimizer = use_optimizer(network=self,
+                                       learning_rate=self.learning_rate,
+                                       momentum=self.momentum,
+                                       weight_decay=self.weight_decay,
+                                       optimizer=self.optimizer_name)
 
         with tqdm(total=self.epochs) as progress:
             for epoch in range(self.epochs):

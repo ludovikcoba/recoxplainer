@@ -15,12 +15,12 @@ base:
     names: [ 'userId', 'itemId', 'rating', 'timestamp' ]
   model:
     gmf:
-      learning_rate: 0.01
-      weight_decay: 0.0
-      latent_dim: 100
-      epochs: 10
+      learning_rate: 0.005
+      weight_decay: 0.0000001
+      latent_dim: 8
+      epochs: 30
       num_negative: 10
-      batch_size: 256
+      batch_size: 1024
       cuda: False
       optimizer_name: 'adam'
     als:

@@ -7,7 +7,7 @@ class EMFLoss(torch.nn.Module):
 
     def forward(self, ratings_pred, ratings, u, v, reg_term, expl, expl_reg_term):
 
-        mse = (ratings_pred.view(-1) - ratings) ** 2
+        mse = (ratings - ratings_pred.view(-1)) ** 2
         u_l2 = reg_term * torch.norm(u, 2, -1)
         v_l2 = reg_term * torch.norm(v, 2, -1)
         expl_constraint = expl_reg_term * torch.norm(u - v, 1, -1) * expl

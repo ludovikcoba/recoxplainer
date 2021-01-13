@@ -39,9 +39,9 @@ class DataReader:
     def make_consecutive_ids_in_dataset(self):
         # TODO: create mapping function
         dataset = self.dataset.rename({
-                    "userId": "user_id",
-                    "itemId": "item_id"
-                }, axis=1)
+            "userId": "user_id",
+            "itemId": "item_id"
+        }, axis=1)
 
         user_id = dataset[['user_id']].drop_duplicates().reindex()
         num_user = len(user_id)
@@ -59,8 +59,10 @@ class DataReader:
             self._dataset, item_id,
             on=['item_id'], how='left')
 
-        self.original_user_id = user_id
-        self.original_item_id = item_id
+        self.original_user_id = user_id.set_index('userId')
+        self.original_item_id = item_id.set_index('itemId')
+        self.new_user_id = user_id.set_index('user_id')
+        self.new_item_id = item_id.set_index('item_id')
 
         self._dataset = self.dataset[
             ['userId', 'itemId', 'rating', 'timestamp']
@@ -83,3 +85,26 @@ class DataReader:
     def num_item(self):
         return self._num_item
 
+    def get_original_user_id(self, u):
+        if isinstance(u, int):
+            return self.original_user_id.loc[u].user_id
+
+        return list(self.original_user_id.loc[u].user_id)
+
+    def get_original_item_id(self, i):
+        if isinstance(i, int):
+            return self.original_item_id.loc[i].item_id
+
+        return list(self.original_item_id.loc[i].item_id)
+
+    def get_new_user_id(self, u):
+        if isinstance(u, int):
+            return self.new_user_id.loc[u].userId
+
+        return list(self.new_user_id.loc[u].userId)
+
+    def get_new_item_id(self, i):
+        if isinstance(i, int):
+            return self.new_item_id.loc[i].itemId
+
+        return list(self.new_item_id.loc[i].itemId)

@@ -6,6 +6,7 @@ from recoexplainer.models import ALS
 from recoexplainer.explain import ALSExplainer
 from recoexplainer.recommender import Recommender
 from recoexplainer.evaluator import Evaluator, Splitter
+from recoexplainer.explain import ARPostHocExplainer, KNNPostHocExplainer
 
 
 class ALSTest(unittest.TestCase):
@@ -13,7 +14,7 @@ class ALSTest(unittest.TestCase):
     def setUp(self):
         self.als = ALS(**cfg.model.als)
 
-        self.data = DataReader(**cfg.testdata)
+        self.data = DataReader(**cfg.ml100k)
         self.data.make_consecutive_ids_in_dataset()
         self.data.binarize()
 
@@ -27,6 +28,8 @@ class ALSTest(unittest.TestCase):
         evaluator = Evaluator(test)
         evaluator.cal_hit_ratio(recommendations)
 
-        explainer = ALSExplainer(self.als, recommendations, self.data)
-        explainer.explain_recommendations()
+        #explainer = ALSExplainer(self.als, recommendations, self.data)
+        #explainer.explain_recommendations()
 
+        KNNexplainer = KNNPostHocExplainer(self.als, recommendations, train)
+        KNNexpl = KNNexplainer.explain_recommendations()
