@@ -23,6 +23,15 @@ base:
       batch_size: 1024
       cuda: False
       optimizer_name: 'adam'
+    mlp:
+      learning_rate: 0.005
+      weight_decay: 0.0000001
+      latent_dim: 8
+      epochs: 30
+      num_negative: 10
+      batch_size: 1024
+      cuda: False
+      optimizer_name: 'adam'
     als:
       learning_rate: 0.1
       latent_dim: 100
