@@ -23,6 +23,15 @@ base:
       batch_size: 1024
       cuda: False
       optimizer_name: 'adam'
+    mlp:
+      learning_rate: 0.005
+      weight_decay: 0.0000001
+      latent_dim: 8
+      epochs: 30
+      num_negative: 10
+      batch_size: 1024
+      cuda: False
+      optimizer_name: 'adam'
     als:
       learning_rate: 0.1
       latent_dim: 100
@@ -49,4 +58,29 @@ base:
       epochs: 10
       positive_threshold: 3
       knn: 10
+    autoencoder:
+      learning_rate: 0.005
+      weight_decay: 0.0000001
+      hidden_layer_features: 8
+      epochs: 30
+      cuda: False
+      optimizer_name: 'adam'
+      positive_threshold: 3
+      knn: 10
+      expl: true
+    als_ml100k:
+      learning_rate: 0.1
+      latent_dim: 16
+      epochs: 30
+      reg_term: 0.005
+    als_ml1m:
+      learning_rate: 0.1
+      latent_dim: 64
+      epochs: 90
+      reg_term: 0.005
+    als_ciaodvd:
+      learning_rate: 0.1
+      latent_dim: 16
+      epochs: 40
+      reg_term: 0.005
 
