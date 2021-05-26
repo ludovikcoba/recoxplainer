@@ -74,8 +74,8 @@ class DataReader:
     def binarize(self, binary_threshold=1):
         """binarize into 0 or 1, imlicit feedback"""
 
-        self._dataset = self._dataset[self._dataset['rating'] > binary_threshold]
-        self._dataset['rating'] = 1.0
+        self._dataset[self._dataset['rating'] > binary_threshold].rating = 1
+        self._dataset[self._dataset['rating'] <= binary_threshold].rating = 0
 
     @property
     def num_user(self):

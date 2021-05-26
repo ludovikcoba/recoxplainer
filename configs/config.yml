@@ -58,4 +58,15 @@ base:
       epochs: 10
       positive_threshold: 3
       knn: 10
+    autoencoder:
+      learning_rate: 0.005
+      weight_decay: 0.0000001
+      hidden_layer_features: 8
+      epochs: 30
+      cuda: False
+      optimizer_name: 'adam'
+      positive_threshold: 3
+      knn: 10
+      expl: true
+
 
