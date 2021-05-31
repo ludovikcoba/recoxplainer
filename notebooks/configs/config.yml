@@ -68,19 +68,3 @@ base:
       positive_threshold: 3
       knn: 10
       expl: true
-    als_ml100k:
-      learning_rate: 0.1
-      latent_dim: 16
-      epochs: 30
-      reg_term: 0.005
-    als_ml1m:
-      learning_rate: 0.1
-      latent_dim: 64
-      epochs: 90
-      reg_term: 0.005
-    als_ciaodvd:
-      learning_rate: 0.1
-      latent_dim: 16
-      epochs: 40
-      reg_term: 0.005
-

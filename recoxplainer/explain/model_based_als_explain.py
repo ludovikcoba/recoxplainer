@@ -26,8 +26,7 @@ class ALSExplainer(Explainer):
         y_t = self.model.item_embedding().transpose()
         temp = np.matmul(y_t, c_u)
         temp = np.matmul(temp, self.model.item_embedding())
-        temp = temp + np.diag(np.dot([self.model.reg_term],self.model.latent_dim)) 
-        # temp = temp + np.diag([self.model.reg_term] * self.model.latent_dim)
+        temp = temp + np.diag([self.model.reg_term] * self.model.latent_dim)
         
         if len(self.get_user_items(user_id)) > 1:
             weight_mtr = np.linalg.inv(temp)
