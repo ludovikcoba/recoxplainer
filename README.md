@@ -59,3 +59,8 @@ And finally run the notebooks:
 ```buildoutcfg
 jupyter notebook
 ```
+
+### Running times
+
+Running times for pre-processing, training, recommendation, explanation, and evaluation can be found in the `running_times.cvs' file. The reported time was calculated using a MacBook Pro 2,3 GHz Dual-Core Intel Core i5, 8 GB 2133 MHz LPDDR3.
+
